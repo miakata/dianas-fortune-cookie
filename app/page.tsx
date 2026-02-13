@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 
@@ -15,53 +15,138 @@ const LYRICS = [
     "I'm exactly like you, Valentine, just come outside and leave with me.",
 ];
 
+const SHARE_SUBJECT = "Diana shared a lyric with you";
+
+const FORMSPREE_MIA_ID = process.env.NEXT_PUBLIC_FORMSPREE_MIA_ID ?? "";
+const FORMSPREE_ZUZA_ID = process.env.NEXT_PUBLIC_FORMSPREE_ZUZA_ID ?? "";
+
+const FLOWER_SRCS = [
+  "/flowers/spring-garden-flower-svgrepo-com.svg",
+  "/flowers/couple-of-roses-in-symmetry-svgrepo-com.svg",
+  "/flowers/floral-design-with-flowers-couple-svgrepo-com.svg",
+  "/flowers/flowers-flower-svgrepo-com.svg",
+  "/flowers/flowers-in-a-pot-svgrepo-com.svg",
+  "/flowers/balloon-svgrepo-com.svg",
+  "/flowers/big-strawberry-svgrepo-com.svg",
+  "/flowers/piece-of-cake-with-berries-svgrepo-com.svg",
+  "/flowers/coffee-cup-with-heart-svgrepo-com.svg",
+  "/flowers/cat-streching-svgrepo-com.svg",
+  "/flowers/cat-satisfied-svgrepo-com.svg",
+  "/flowers/dog-head-profile-svgrepo-com.svg",
+  "/flowers/love-letter-with-hearts-svgrepo-com.svg",
+  "/flowers/love-potion-svgrepo-com.svg",
+  "/flowers/cheers-toast-svgrepo-com.svg",
+  "/flowers/heart-glasses-svgrepo-com.svg",
+  "/flowers/llama-svgrepo-com.svg",
+] as const;
+
+const COOKIE_FRAMES = ["/cookie/1.svg", "/cookie/2.svg", "/cookie/3.svg"] as const;
+
 function pickLyric() {
   return LYRICS[Math.floor(Math.random() * LYRICS.length)];
+}
+
+async function sendViaFormspree(formId: string, lyric: string) {
+  const res = await fetch(`https://formspree.io/f/${formId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({
+      _subject: SHARE_SUBJECT,
+      message: lyric,
+    }),
+  });
+  if (!res.ok) throw new Error("Failed to send");
 }
 
 export default function Page() {
   const [open, setOpen] = useState(false);
   const [lyric, setLyric] = useState("…");
-
-  // used to re-trigger CSS animations cleanly
-  const [animKey, setAnimKey] = useState(0);
+  const [sending, setSending] = useState<"Mia" | "Zuza" | null>(null);
+  const [sentTo, setSentTo] = useState<"Mia" | "Zuza" | null>(null);
+  const [sendError, setSendError] = useState(false);
+  const [flowerIndex, setFlowerIndex] = useState(0);
+  const [cookieFrame, setCookieFrame] = useState(0);
 
   const tag = useMemo(() => "— fortune lyric", []);
 
-  const playOpen = () => {
-    // reset
-    setOpen(false);
-    setLyric("…");
-    setAnimKey((k) => k + 1);
+  useEffect(() => {
+    if (!open) return;
+    setCookieFrame(0);
+    const t1 = window.setTimeout(() => setCookieFrame(1), 800);
+    const t2 = window.setTimeout(() => setCookieFrame(2), 1600);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [open]);
 
-    // re-open next tick so animations re-run
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        setOpen(true);
-        window.setTimeout(() => setLyric(pickLyric()), 800);
-      });
-    });
+  const handleShare = async (target: "Mia" | "Zuza") => {
+    const formId = target === "Mia" ? FORMSPREE_MIA_ID : FORMSPREE_ZUZA_ID;
+    if (!formId) {
+      setSendError(true);
+      return;
+    }
+    setSending(target);
+    setSendError(false);
+    setSentTo(null);
+    try {
+      await sendViaFormspree(formId, lyric);
+      setSentTo(target);
+      window.setTimeout(() => setSentTo(null), 3000);
+    } catch {
+      setSendError(true);
+    } finally {
+      setSending(null);
+    }
   };
 
+  const crackOpen = (advanceFlower = true) => {
+    setOpen(true);
+    window.setTimeout(() => setLyric(pickLyric()), 1600);
+    if (advanceFlower) setFlowerIndex((i) => (i + 1) % FLOWER_SRCS.length);
+  };
+
+  const getAnother = () => {
+    setOpen(false);
+    setLyric("…");
+    setCookieFrame(0);
+  };
+
+  const handleStageAction = () => (open ? getAnother() : crackOpen());
+
   useEffect(() => {
-    playOpen();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    crackOpen(false);
   }, []);
 
   return (
     <main className="wrap">
+      {!open && (
+        <>
+          <img
+            src={FLOWER_SRCS[flowerIndex]}
+            alt=""
+            className="flowers-img"
+            aria-hidden
+          />
+          <h1 className="greeting">Hello Diana, got some munchies?</h1>
+        </>
+      )}
       <div
-        key={animKey}
         className={`stage ${open ? "open" : ""}`}
         aria-label="Fortune cookie lyric generator"
-        onClick={playOpen}
+        onClick={handleStageAction}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => (e.key === "Enter" || e.key === " " ? playOpen() : null)}
+        onKeyDown={(e) =>
+          e.key === "Enter" || e.key === " " ? handleStageAction() : null
+        }
       >
         <div className="cookie" aria-hidden="true">
-          <div className="half left" />
-          <div className="half right" />
+          <img
+            src={COOKIE_FRAMES[open ? cookieFrame : 0]}
+            alt=""
+            className="cookie-img"
+          />
         </div>
 
         <div className="paper" role="status" aria-live="polite">
@@ -70,11 +155,45 @@ export default function Page() {
         </div>
       </div>
 
-      <button className="btn" onClick={playOpen} type="button">
-        Crack another 🍪
-      </button>
-
-      <div className="hint">Tip: reload for auto-open, or tap the cookie.</div>
+      {(!open || lyric !== "…") && (
+        <button className="btn" onClick={handleStageAction} type="button">
+          {open ? "Click to get another one" : "Click to crack open"}
+        </button>
+      )}
+      {open && lyric !== "…" && (
+        <div className="btn-hint-wrap" role="group" aria-label="Share lyric by email">
+          <p className="btn-hint">or share the vibes</p>
+          <div className="share-stack">
+            <button
+              type="button"
+              className="share-btn share-btn-stack"
+              onClick={() => handleShare("Mia")}
+              disabled={!!sending}
+              aria-busy={sending === "Mia"}
+            >
+              {sending === "Mia" ? "Sending…" : sentTo === "Mia" ? "Sent!" : "Share with Mia"}
+            </button>
+            <button
+              type="button"
+              className="share-btn share-btn-stack"
+              onClick={() => handleShare("Zuza")}
+              disabled={!!sending}
+              aria-busy={sending === "Zuza"}
+            >
+              {sending === "Zuza"
+                ? "Sending…"
+                : sentTo === "Zuza"
+                  ? "Sent!"
+                  : "Share with Zuza"}
+            </button>
+          </div>
+        </div>
+      )}
+      {open && lyric !== "…" && sendError && (
+        <p className="share-error" role="alert">
+          Couldn’t send. Check Formspree setup.
+        </p>
+      )}
 
       <style jsx>{`
         :global(html, body) {
@@ -83,13 +202,8 @@ export default function Page() {
         :global(body) {
           margin: 0;
           overflow: hidden;
-          background: radial-gradient(
-            1200px 800px at 50% 35%,
-            #141a2a 0%,
-            #0b0d12 55%,
-            #07080c 100%
-          );
-          color: #e9ecf2;
+          background: #f7f4ef;
+          color: #1a1a1a;
           font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
             Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
           display: grid;
@@ -104,11 +218,22 @@ export default function Page() {
           text-align: center;
         }
 
-        .hint {
-          font-size: 13px;
-          color: rgba(233, 236, 242, 0.72);
+        .flowers-img {
+          height: 44px;
+          width: auto;
+          max-width: 72px;
+          margin-bottom: 6px;
+          object-fit: contain;
+          object-position: center;
+        }
+        .greeting {
+          margin: 0;
+          font-family: var(--font-space-mono), monospace;
+          font-size: 18px;
+          font-weight: 400;
+          text-transform: uppercase;
           letter-spacing: 0.02em;
-          user-select: none;
+          color: #1a1a1a;
         }
 
         .stage {
@@ -121,13 +246,29 @@ export default function Page() {
           cursor: pointer;
           outline: none;
         }
+        .stage.open .paper {
+          z-index: 1;
+        }
+        .stage.open .cookie {
+          z-index: 0;
+        }
+        .stage:not(.open) .cookie {
+          animation: cookie-bounce 2.5s ease-in-out infinite;
+        }
 
         .cookie {
           position: relative;
           width: 220px;
           height: 170px;
           transform-origin: center;
-          animation: cookie-pop 700ms ease-out both;
+          animation: cookie-pop 1400ms ease-out both;
+        }
+
+        .cookie-img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          object-position: center;
         }
 
         @keyframes cookie-pop {
@@ -140,51 +281,13 @@ export default function Page() {
             opacity: 1;
           }
         }
-
-        .half {
-          position: absolute;
-          width: 140px;
-          height: 140px;
-          top: 12px;
-          border-radius: 999px;
-          background: radial-gradient(
-              55px 55px at 40% 35%,
-              rgba(255, 255, 255, 0.25),
-              transparent 60%
-            ),
-            radial-gradient(
-              120px 120px at 35% 40%,
-              #e7c48a 0%,
-              #caa56b 70%,
-              #b88f53 100%
-            );
-          border: 1px solid rgba(0, 0, 0, 0.12);
-          box-shadow: inset -10px -14px 18px rgba(0, 0, 0, 0.12);
-        }
-
-        .left {
-          left: 0;
-          transform-origin: 135px 70px;
-        }
-        .right {
-          right: 0;
-          transform-origin: 5px 70px;
-        }
-
-        .half::after {
-          content: "";
-          position: absolute;
-          width: 86px;
-          height: 86px;
-          top: 32px;
-          left: 30px;
-          border-radius: 999px;
-          background: radial-gradient(
-            70px 70px at 60% 45%,
-            rgba(0, 0, 0, 0.12),
-            transparent 60%
-          );
-          opacity: 0.35;
+        @keyframes cookie-bounce {
+          0%, 100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-5px);
+          }
         }
 
         .paper {
@@ -192,7 +295,7 @@ export default function Page() {
           width: 200px;
           max-width: 78vw;
           padding: 14px 16px;
-          border-radius: 14px;
+          border-radius: 4px;
           background: linear-gradient(#fff, #f4f1ea);
           color: #1a1a1a;
           font-family: ui-serif, Georgia, "Times New Roman", Times, serif;
@@ -205,6 +308,20 @@ export default function Page() {
 
         .lyric {
           font-size: 18px;
+          transform-origin: center center;
+        }
+        .open .paper .lyric {
+          animation: lyric-reveal 1200ms cubic-bezier(0.2, 0.9, 0.15, 1) 1700ms both;
+        }
+        @keyframes lyric-reveal {
+          0% {
+            opacity: 0;
+            transform: scale(0.92);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
         }
 
         .small {
@@ -215,38 +332,37 @@ export default function Page() {
           letter-spacing: 0.02em;
         }
 
-        /* OPEN ANIMATION */
-        .open .left {
-          animation: open-left 900ms cubic-bezier(0.2, 0.9, 0.15, 1) 250ms both;
+        .share-btn {
+          font-family: var(--font-space-mono), monospace;
+          font-size: 11px;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: #1a1a1a;
+          opacity: 0.85;
+          padding: 4px 8px;
+          border: 1px solid rgba(26, 26, 26, 0.25);
+          border-radius: 4px;
+          background: transparent;
+          cursor: pointer;
+          transition: opacity 0.12s ease, border-color 0.12s ease;
         }
-        .open .right {
-          animation: open-right 900ms cubic-bezier(0.2, 0.9, 0.15, 1) 250ms both;
+        .share-btn:hover:not(:disabled) {
+          opacity: 1;
+          border-color: rgba(26, 26, 26, 0.5);
         }
-        @keyframes open-left {
-          0% {
-            transform: rotate(0deg) translateX(0) translateY(0);
-          }
-          70% {
-            transform: rotate(-42deg) translateX(-6px) translateY(-2px);
-          }
-          100% {
-            transform: rotate(-55deg) translateX(-10px) translateY(-4px);
-          }
+        .share-btn:disabled {
+          cursor: not-allowed;
+          opacity: 0.7;
         }
-        @keyframes open-right {
-          0% {
-            transform: rotate(0deg) translateX(0) translateY(0);
-          }
-          70% {
-            transform: rotate(42deg) translateX(6px) translateY(-2px);
-          }
-          100% {
-            transform: rotate(55deg) translateX(10px) translateY(-4px);
-          }
+        .share-error {
+          margin: 8px 0 0;
+          font-size: 11px;
+          color: #b91c1c;
         }
 
         .open .paper {
-          animation: paper-rise 900ms cubic-bezier(0.2, 0.9, 0.15, 1) 650ms both;
+          animation: paper-rise 1800ms cubic-bezier(0.2, 0.9, 0.15, 1) 1600ms both;
+          pointer-events: auto;
         }
         @keyframes paper-rise {
           0% {
@@ -255,63 +371,68 @@ export default function Page() {
           }
           100% {
             opacity: 1;
-            transform: translateY(-16px) scale(1);
-          }
-        }
-
-        .paper::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          border-radius: 14px;
-          background: linear-gradient(
-            120deg,
-            transparent 0%,
-            rgba(255, 255, 255, 0.55) 45%,
-            transparent 70%
-          );
-          transform: translateX(-120%);
-          opacity: 0.55;
-        }
-        .open .paper::before {
-          animation: shimmer 900ms ease 950ms both;
-        }
-        @keyframes shimmer {
-          to {
-            transform: translateX(120%);
+            transform: translateY(0) scale(1);
           }
         }
 
         .btn {
-          margin-top: 6px;
-          background: rgba(255, 255, 255, 0.08);
-          color: #e9ecf2;
-          border: 1px solid rgba(255, 255, 255, 0.14);
+          margin-top: -14px;
+          width: 100%;
+          background: #1a1a1a;
+          color: #f7f4ef;
+          border: 1px solid rgba(26, 26, 26, 0.25);
+          border-radius: 4px;
           padding: 10px 14px;
-          border-radius: 999px;
           cursor: pointer;
-          transition: transform 0.12s ease, background 0.12s ease;
+          font-family: var(--font-space-mono), monospace;
           font-size: 14px;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          transition: opacity 0.12s ease, background 0.12s ease;
         }
         .btn:hover {
-          transform: translateY(-1px);
-          background: rgba(255, 255, 255, 0.12);
+          opacity: 0.9;
         }
         .btn:active {
-          transform: translateY(0px) scale(0.99);
+          opacity: 0.95;
+        }
+
+        .btn-hint-wrap {
+          width: 100%;
+          margin-top: 8px;
+        }
+        .btn-hint {
+          margin: 0 0 10px;
+          font-size: 12px;
+          color: rgba(26, 26, 26, 0.7);
+          font-family: ui-sans-serif, system-ui, sans-serif;
+        }
+        .share-stack {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          width: 100%;
+        }
+        .share-btn-stack {
+          width: 100%;
+          padding: 10px 14px;
+          border: 1px solid rgba(26, 26, 26, 0.25);
         }
 
         @media (prefers-reduced-motion: reduce) {
           .cookie,
-          .open .left,
-          .open .right,
+          .stage:not(.open) .cookie,
           .open .paper,
-          .open .paper::before {
+          .open .paper .lyric {
             animation: none !important;
           }
           .paper {
             opacity: 1;
-            transform: translateY(-16px) scale(1);
+            transform: translateY(0) scale(1);
+          }
+          .open .paper .lyric {
+            opacity: 1;
+            transform: scale(1);
           }
         }
       `}</style>
