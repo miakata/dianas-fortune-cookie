@@ -13,6 +13,18 @@ const LYRICS = [
     "You give me such a future feeling. We're in the middle of some kind of cosmic rearrangement.",
   "You'd fall into rivers with friends on the weekends.",
     "I'm exactly like you, Valentine, just come outside and leave with me.",
+    "Everybody loves a quiet child. Underwater, you're almost free. If you wanna be alone, come with me",
+    "I know I can get attached and then unattached to my own versions of others",
+    "Now that you got everybody you consider sharp, all alone, all together, all together in the dark",
+    "Hang your holiday rainbow lights in the garden. And I'll, I'll bring a nice icy drink to you",
+    "You were a kindness when I was a stranger",
+    "I guess you must be somewhere breathing, in patterns unfamiliar to the one you're underneath",
+    "You could've made a safer bet, but what you break is what you get",
+    "If I go to the sea, I'll bring you down, down with me",
+    "Another year gets away. Another summer of love",
+    "Learn to appreciate the void",
+    "Tunnel vision lights my way. Leave a little life today",
+    "Let's not try to figure out everything at once"
 ];
 
 const SHARE_SUBJECT = "Diana shared a lyric with you";
