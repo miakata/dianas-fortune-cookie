@@ -1,0 +1,13 @@
+<svg width="185" height="130" viewBox="0 0 185 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M30.1211 65.5466C27.6205 108.046 64.6211 117.047 70.6205 117.547C76.62 118.047 93.1214 70.0464 93.1208 63.5464C93.1208 68.5465 107.621 115.547 113.621 117.047C119.621 118.547 151.621 108.047 154.621 67.5466C157.622 27.0466 103.621 12.0466 93.621 13.0466C83.621 14.0466 32.6216 23.0467 30.1211 65.5466Z" stroke="black" stroke-linejoin="round"/>
+<circle cx="109.121" cy="50.0464" r="9.5" fill="black"/>
+<circle cx="76.1208" cy="50.0464" r="9.5" fill="black"/>
+<circle cx="79.6208" cy="47.5464" r="4" fill="#F7F3EF"/>
+<circle cx="72.6208" cy="54.5464" r="2" fill="#F7F3EF"/>
+<circle cx="106.621" cy="47.5464" r="4" transform="rotate(-90 106.621 47.5464)" fill="#F7F3EF"/>
+<circle cx="113.621" cy="54.5464" r="2" transform="rotate(-90 113.621 54.5464)" fill="#F7F3EF"/>
+<ellipse cx="66.1208" cy="64.0464" rx="5.5" ry="2.5" fill="black"/>
+<ellipse cx="119.121" cy="64.0464" rx="5.5" ry="2.5" fill="black"/>
+<ellipse cx="93.6208" cy="60.5464" rx="2" ry="1" fill="black"/>
+<circle cx="93.5" cy="58.5" r="3" stroke="black"/>
+</svg>
