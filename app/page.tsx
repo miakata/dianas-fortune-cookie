@@ -29,8 +29,12 @@ const LYRICS = [
 
 const SHARE_SUBJECT = "Diana shared a lyric with you";
 
-const FORMSPREE_MIA_ID = process.env.NEXT_PUBLIC_FORMSPREE_MIA_ID ?? "";
-const FORMSPREE_ZUZA_ID = process.env.NEXT_PUBLIC_FORMSPREE_ZUZA_ID ?? "";
+// Default form IDs so the share form works when deployed without env config.
+// Override with NEXT_PUBLIC_FORMSPREE_MIA_ID / NEXT_PUBLIC_FORMSPREE_ZUZA_ID if needed.
+const FORMSPREE_MIA_ID =
+  process.env.NEXT_PUBLIC_FORMSPREE_MIA_ID ?? "xzdaeovb";
+const FORMSPREE_ZUZA_ID =
+  process.env.NEXT_PUBLIC_FORMSPREE_ZUZA_ID ?? "xwvnlaeg";
 
 const FLOWER_SRCS = [
   "/flowers/spring-garden-flower-svgrepo-com.svg",

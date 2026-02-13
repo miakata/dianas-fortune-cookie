@@ -22,14 +22,14 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 The “Mia” and “Zuza” buttons send the current lyric via [Formspree](https://formspree.io) so the recipient gets an email without opening a mail client.
 
-1. **Create two forms** in your [Formspree dashboard](https://dashboard.formspree.io):
-   - One for Mia, one for Zuza. Copy each form’s ID from the form’s endpoint (e.g. `https://formspree.io/f/abc123` → ID is `abc123`).
-2. **Create a file `.env.local`** in the project root with:
-   ```bash
-   NEXT_PUBLIC_FORMSPREE_MIA_ID=your_mia_form_id
-   NEXT_PUBLIC_FORMSPREE_ZUZA_ID=your_zuza_form_id
-   ```
-3. Restart the dev server (`npm run dev`).
+The app uses built-in Formspree form IDs (Mia `xzdaeovb`, Zuza `xwvnlaeg`), so **the share form works when deployed** without setting any environment variables.
+
+To use different forms (e.g. your own Formspree forms), create `.env.local` with:
+```bash
+NEXT_PUBLIC_FORMSPREE_MIA_ID=your_mia_form_id
+NEXT_PUBLIC_FORMSPREE_ZUZA_ID=your_zuza_form_id
+```
+Then restart the dev server (`npm run dev`).
 
 **Note:** On the free plan, both forms send to the email on your Formspree account. To have emails go directly to Mia and Zuza, either (a) they each create a form and send you their form ID, or (b) use Formspree’s Form Rules (Business plan) to route by form.
 
